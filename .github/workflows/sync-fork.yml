@@ -1,0 +1,21 @@
+name: Sync fork to abishr-ai
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          git remote add fork https://x-access-token:${{ secrets.FORK_SYNC_TOKEN }}@github.com/abishr-ai/jarvis-be.git
+          git push fork --force --all
+          git push fork --force --tags
