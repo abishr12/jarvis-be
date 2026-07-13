@@ -8,6 +8,7 @@ from langchain.agents.structured_output import StructuredOutputError, ToolStrate
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 from app.models.workflow import WorkflowAction, WorkflowGenerationResult
 
@@ -34,6 +35,13 @@ SYSTEM_PROMPT = _env.get_template("workflow_system.jinja").render(
     actions=[{"name": action.value, "description": desc} for action, desc in ACTION_CATALOG.items()]
 )
 
+_CHECKPOINT_SERDE = JsonPlusSerializer(
+    allowed_msgpack_modules=[
+        ("app.models.workflow", "WorkflowAction"),
+        ("app.models.workflow", "WorkflowGenerationResult"),
+    ]
+)
+
 
 class WorkflowProviderError(Exception):
     """The upstream model request failed."""
@@ -50,7 +58,7 @@ class WorkflowGenerator:
             tools=[],
             system_prompt=SYSTEM_PROMPT,
             response_format=ToolStrategy(WorkflowGenerationResult),
-            checkpointer=InMemorySaver(),
+            checkpointer=InMemorySaver(serde=_CHECKPOINT_SERDE),
         )
 
     async def generate(self, prompt: str, thread_id: str) -> WorkflowGenerationResult:
