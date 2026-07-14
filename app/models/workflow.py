@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -94,3 +94,43 @@ class Workflow(BaseModel):
 class WorkflowGenerationResult(BaseModel):
     message: str = Field(min_length=1)
     workflow: Workflow
+
+
+class WorkflowMessageDeltaEvent(BaseModel):
+    type: Literal["message_delta"] = "message_delta"
+    delta: str
+
+
+class WorkflowToolCallEvent(BaseModel):
+    type: Literal["tool_call"] = "tool_call"
+    tool_call_id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+class WorkflowToolResultEvent(BaseModel):
+    type: Literal["tool_result"] = "tool_result"
+    tool_call_id: str
+    name: str
+    output: Any
+
+
+class WorkflowResultEvent(BaseModel):
+    type: Literal["result"] = "result"
+    result: WorkflowGenerationResult
+
+
+class WorkflowErrorEvent(BaseModel):
+    type: Literal["error"] = "error"
+    code: Literal["generation_error", "provider_error"]
+    message: str
+
+
+type WorkflowStreamEvent = Annotated[
+    WorkflowMessageDeltaEvent
+    | WorkflowToolCallEvent
+    | WorkflowToolResultEvent
+    | WorkflowResultEvent
+    | WorkflowErrorEvent,
+    Field(discriminator="type"),
+]
