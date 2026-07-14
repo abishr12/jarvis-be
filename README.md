@@ -25,6 +25,13 @@ Server runs at http://localhost:8000. Health check: http://localhost:8000/health
 uv run pytest
 ```
 
+Unit tests cover deterministic behavior such as workflow validation, stream
+events, and HTTP serialization. Provider integration tests should be kept
+separate because they require API credentials and make nondeterministic network
+calls. Once representative workflow prompts and scoring criteria exist, add
+LangSmith evaluations to measure semantic workflow quality and compare prompt
+or model changes over time.
+
 ## Lint & type-check
 
 ```bash
